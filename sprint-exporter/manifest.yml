@@ -2,14 +2,13 @@ modules:
   jira:projectPage:
     - key: sprint-export-button
       title: Export Sprint to CSV
-      resource: main # Changed 'resource' to point to a defined resource
+      resource: main
       location:
         projectTab: backlog
-      layout:
-        alignItems: flex-start
+      layout: basic # Changed to a valid value
 resources:
-  - key: main # Define the 'main' resource
-    path: static/backlog-button/index.html # Path to your static HTML file
+  - key: main
+    path: static/backlog-button/index.html
 permissions:
   scopes:
     - read:jira-work
