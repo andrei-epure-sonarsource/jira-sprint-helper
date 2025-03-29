@@ -12,6 +12,11 @@ modules:
 resources:
   - key: main
     path: static/hello-world/build
+permissions:
+  scopes:
+    - read:sprint:jira-software
+    - read:issue-details:jira
+    - read:jql:jira
 app:
   runtime:
     name: nodejs20.x
