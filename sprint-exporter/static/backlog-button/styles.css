@@ -28,3 +28,24 @@
 #downloadButton {
     display: none;
 }
+
+/* Add missing loader styles */
+#loader-container {
+    margin: 15px 0;
+}
+
+.loader {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0, 82, 204, 0.2);
+    border-radius: 50%;
+    border-top-color: #0052CC;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

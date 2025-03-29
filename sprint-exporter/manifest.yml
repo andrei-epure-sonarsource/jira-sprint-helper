@@ -1,8 +1,8 @@
 modules:
   jira:sprintAction:
     - key: export-sprint-action
-      resource: main
       title: Export Sprint to CSV
+      resource: main
   function:
     - key: export-sprint-data
       handler: index.exportSprintData

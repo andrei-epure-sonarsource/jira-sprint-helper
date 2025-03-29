@@ -1,5 +1,4 @@
 // Import the Forge API modules that we need.
-// 'storage' is for storing and retrieving data within your app's storage.
 // 'requestJira' is for making authenticated HTTP requests to Jira REST APIs.
 import { requestJira } from '@forge/api';
 
@@ -9,16 +8,17 @@ export const exportSprintData = async (req) => {
   console.log('Backend function called with payload:', req.payload);
 
   try {
-    // The 'req' object contains information about the request, including the payload
-    // sent from the frontend. Here, we extract the 'sprintId' from the payload.
-    const { sprintId } = req.payload;
+    // The sprint ID will come directly from the context when using sprintAction with function
+    const sprintId = req.context.extension.sprint.id;
 
-    console.log('Received sprintId:', sprintId);
+    console.log('Received sprintId from context:', sprintId);
 
-    // Perform a basic check to ensure that the 'sprintId' was provided in the payload.
     if (!sprintId) {
-      console.error('Sprint ID not provided in the request payload.');
-      return null; // Indicate failure by returning null.
+      console.error('Sprint ID not found in context');
+      return { 
+        statusCode: 400,
+        body: JSON.stringify({ error: 'No sprint ID found' }) 
+      };
     }
 
     console.log('Fetching issues for sprint', sprintId);
@@ -32,7 +32,13 @@ export const exportSprintData = async (req) => {
 
     // If the sprint has no issues, return an empty CSV header row.
     if (issueKeys.length === 0) {
-      return 'Ticket ID,Parent Ticket ID,Ticket URL,Ticket Title\n';
+      return {
+        body: 'Ticket ID,Parent Ticket ID,Ticket URL,Ticket Title\n',
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="sprint_${sprintId}_export.csv"`
+        }
+      };
     }
 
     // Construct a JQL (Jira Query Language) query to find all the issues in the sprint
@@ -85,12 +91,22 @@ export const exportSprintData = async (req) => {
 
     // Add logging before returning
     console.log('Successfully generated CSV with rows:', csvRows.length);
-    // Join all the rows in the 'csvRows' array with a newline character to form the complete CSV string.
-    return csvRows.join('\n');
+
+    // Return the CSV data with proper headers to trigger a download
+    return {
+      body: csvRows.join('\n'),
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': `attachment; filename="sprint_${sprintId}_export.csv"`
+      }
+    };
 
   } catch (error) {
     // Log any errors that occur during the API calls or data processing in the backend.
     console.error('Error in exportSprintData:', error);
-    return null; // Indicate failure by returning null.
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message || 'Unknown error' })
+    };
   }
 };
