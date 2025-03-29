@@ -6,17 +6,23 @@ import { requestJira } from '@forge/api';
 // Define the Forge function that will be called from the frontend (script.js)
 // when the user clicks the "Export to CSV" button.
 export const exportSprintData = async (req) => {
-  // The 'req' object contains information about the request, including the payload
-  // sent from the frontend. Here, we extract the 'sprintId' from the payload.
-  const { sprintId } = req.payload;
-
-  // Perform a basic check to ensure that the 'sprintId' was provided in the payload.
-  if (!sprintId) {
-    console.error('Sprint ID not provided in the request payload.');
-    return null; // Indicate failure by returning null.
-  }
+  console.log('Backend function called with payload:', req.payload);
 
   try {
+    // The 'req' object contains information about the request, including the payload
+    // sent from the frontend. Here, we extract the 'sprintId' from the payload.
+    const { sprintId } = req.payload;
+
+    console.log('Received sprintId:', sprintId);
+
+    // Perform a basic check to ensure that the 'sprintId' was provided in the payload.
+    if (!sprintId) {
+      console.error('Sprint ID not provided in the request payload.');
+      return null; // Indicate failure by returning null.
+    }
+
+    console.log('Fetching issues for sprint', sprintId);
+
     // Use the Forge Bridge's 'requestJira' API to call the Jira Agile API endpoint
     // to get all issues that are part of the specified sprint.
     const issueKeysResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue`);
@@ -77,12 +83,14 @@ export const exportSprintData = async (req) => {
       }
     });
 
+    // Add logging before returning
+    console.log('Successfully generated CSV with rows:', csvRows.length);
     // Join all the rows in the 'csvRows' array with a newline character to form the complete CSV string.
     return csvRows.join('\n');
 
   } catch (error) {
     // Log any errors that occur during the API calls or data processing in the backend.
-    console.error('Error fetching sprint issues:', error);
+    console.error('Error in exportSprintData:', error);
     return null; // Indicate failure by returning null.
   }
 };
