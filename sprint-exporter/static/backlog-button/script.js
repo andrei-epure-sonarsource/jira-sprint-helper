@@ -5,112 +5,84 @@
 // Wait for Forge API to be available
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM content loaded');
-  // Important: The bridge might not be immediately available when DOMContentLoaded fires
-  const getBridge = () => {
-    console.log('Trying to get bridge, window.forge =', window.forge ? 'exists' : 'missing');
-    if (window.forge) {
-      console.log('Forge found! Initializing app...');
-      initApp(window.forge.bridge);
-    } else {
-      // Retry after a short delay
-      console.log('Forge not found, will retry in 100ms');
-      setTimeout(getBridge, 100);
-    }
-  };
   
-  getBridge();
-});
-
-// Main application logic moved to a separate function
-function initApp(bridge) {
-    console.log('initApp called with bridge:', bridge);
-    
-    const statusDiv = document.getElementById('status');
-    const downloadButton = document.getElementById('downloadButton');
-    const errorDiv = document.getElementById('error');
-    const loaderContainer = document.getElementById('loader-container');
-    
-    console.log('DOM elements found:', {
-      statusDiv: !!statusDiv,
-      downloadButton: !!downloadButton,
-      errorDiv: !!errorDiv,
-      loaderContainer: !!loaderContainer
+  const statusDiv = document.getElementById('status');
+  const errorDiv = document.getElementById('error');
+  const loaderContainer = document.getElementById('loader-container');
+  const downloadButton = document.getElementById('downloadButton');
+  
+  // Verify what's available in the global scope
+  console.log('Window object keys:', Object.keys(window));
+  
+  if (statusDiv) statusDiv.textContent = 'Checking for Forge API...';
+  
+  // Check if we're running inside Forge properly
+  if (!window.forge) {
+    console.error('Not running in Forge environment - window.forge is missing');
+    if (errorDiv) errorDiv.textContent = 'This app must run inside Atlassian Forge.';
+    if (statusDiv) statusDiv.textContent = 'Environment error';
+    return;
+  }
+  
+  // Log what's available in the forge object
+  console.log('Forge object properties:', Object.keys(window.forge));
+  
+  // Get the bridge
+  const bridge = window.forge.bridge;
+  if (!bridge) {
+    console.error('Forge bridge is not available');
+    if (errorDiv) errorDiv.textContent = 'Forge bridge is not available.';
+    if (statusDiv) statusDiv.textContent = 'Bridge error';
+    return;
+  }
+  
+  console.log('Bridge found, initializing...');
+  
+  // Use the bridge to get context
+  bridge.getContext()
+    .then(context => {
+      console.log('Context:', context);
+      
+      // Extract sprint ID from context
+      const sprintId = context?.extension?.sprint?.id;
+      console.log('Sprint ID:', sprintId);
+      
+      if (!sprintId) {
+        throw new Error('Could not determine sprint ID');
+      }
+      
+      if (statusDiv) statusDiv.textContent = `Processing Sprint #${sprintId}...`;
+      
+      // Call the backend function
+      return bridge.invoke('export-sprint-data', { sprintId });
+    })
+    .then(result => {
+      console.log('Function call succeeded');
+      
+      if (loaderContainer) loaderContainer.style.display = 'none';
+      if (statusDiv) statusDiv.textContent = 'Export complete!';
+      
+      if (downloadButton) {
+        downloadButton.style.display = 'block';
+        downloadButton.onclick = () => downloadCSV(result, 'sprint_export.csv');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      if (statusDiv) statusDiv.textContent = 'Error occurred';
+      if (errorDiv) errorDiv.textContent = error.message || 'Unknown error';
+      if (loaderContainer) loaderContainer.style.display = 'none';
     });
-    
-    // Set initial text in case the async function doesn't run
-    if (statusDiv) statusDiv.textContent = 'Initializing...';
-    
-    (async function() {
-        try {
-            console.log('Starting async function...');
-            
-            // Get the context from the bridge
-            console.log('Getting context...');
-            const context = await bridge.getContext();
-            console.log('Context received:', context);
-            
-            // With jira:sprintAction module, the sprint ID is provided in the context
-            console.log('Context extension:', context?.extension);
-            const sprintId = context?.extension?.sprint?.id;
-            console.log('Sprint ID:', sprintId);
-            
-            if (!sprintId) {
-                console.error('No sprint ID found in context');
-                if (errorDiv) errorDiv.textContent = 'No sprint ID found in context.';
-                if (statusDiv) statusDiv.textContent = 'Error: Could not identify sprint';
-                if (loaderContainer) loaderContainer.style.display = 'none';
-                return;
-            }
-            
-            if (statusDiv) statusDiv.textContent = `Exporting data for Sprint #${sprintId}...`;
-            
-            // Invoke the backend function
-            console.log('Invoking export-sprint-data with sprintId:', sprintId);
-            const csvData = await bridge.invoke('export-sprint-data', { sprintId });
-            console.log('Received CSV data:', csvData ? 'yes' : 'no', 'length:', csvData?.length);
-            
-            if (!csvData) {
-                console.error('No CSV data returned from backend');
-                if (errorDiv) errorDiv.textContent = 'Failed to retrieve sprint data.';
-                if (statusDiv) statusDiv.textContent = 'Export failed';
-                return;
-            }
-            
-            // Show the download button
-            console.log('Export successful, showing download button');
-            if (downloadButton) downloadButton.style.display = 'block';
-            if (statusDiv) statusDiv.textContent = 'Export ready!';
-            
-            // Set up download button click handler
-            if (downloadButton) {
-                downloadButton.addEventListener('click', () => {
-                    console.log('Download button clicked');
-                    downloadCSV(csvData, `sprint_${sprintId}_export.csv`);
-                });
-            }
-            
-        } catch (error) {
-            console.error('Error in sprint export:', error);
-            console.error('Error details:', {
-                message: error.message,
-                stack: error.stack
-            });
-            if (errorDiv) errorDiv.textContent = `An error occurred: ${error.message || 'Unknown error'}`;
-            if (statusDiv) statusDiv.textContent = 'Export failed';
-            if (loaderContainer) loaderContainer.style.display = 'none';
-        }
-    })();
-}
+});
 
 // Function to programmatically trigger the download of a CSV file
 function downloadCSV(data, filename) {
-    console.log('downloadCSV called with filename:', filename, 'data length:', data.length);
-    const csvFile = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(csvFile);
-    downloadLink.download = filename;
-    document.body.appendChild(downloadLink);
-    console.log('Triggering download');
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+  const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
