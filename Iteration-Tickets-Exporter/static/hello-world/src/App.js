@@ -34,8 +34,11 @@ function App() {
         const issuesData = await issuesResponse.json();
         console.log('Issue data:', issuesData);
         
-        // Get base URL from the browser
-        const baseUrl = window.location.origin;
+        // Get Jira instance URL from context
+        const baseUrl = context.cloudId 
+          ? `https://${context.cloudId}.atlassian.net`
+          : context.siteUrl || window.location.origin;
+
         console.log('Using base URL:', baseUrl);
         
         // Format the data for CSV with parent info
