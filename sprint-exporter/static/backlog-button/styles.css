@@ -1,0 +1,30 @@
+.container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.button {
+    background-color: #0052CC;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 3px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    margin: 10px 0;
+}
+
+.loading {
+    margin-top: 10px;
+}
+
+.error {
+    color: #DE350B;
+    margin-top: 10px;
+}
+
+#downloadButton {
+    display: none;
+}
