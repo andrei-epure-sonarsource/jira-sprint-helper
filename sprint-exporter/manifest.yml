@@ -3,7 +3,6 @@ modules:
     - key: export-sprint-action
       resource: main
       title: Export Sprint to CSV
-      function: export-sprint-data
   function:
     - key: export-sprint-data
       handler: index.exportSprintData
