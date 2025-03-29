@@ -101,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Use the Forge Bridge to call the backend function 'exportSprintData', passing the target sprint ID.
-      const csvData = await bridge.call('exportSprintData', { sprintId: targetSprintId });
+      // Use the Forge Bridge to call the backend function 'export-sprint-data', passing the target sprint ID.
+      const csvData = await bridge.invoke('export-sprint-data', { sprintId: targetSprintId });
 
       if (csvData) {
         downloadCSV(csvData, `sprint_${targetSprintId}_estimation_data.csv`);

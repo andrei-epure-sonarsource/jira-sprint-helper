@@ -5,13 +5,18 @@ modules:
       resource: main
       location:
         projectTab: backlog
-      layout: basic # Changed to a valid value
+      layout: basic
+  function:
+    - key: export-sprint-data
+      handler: index.exportSprintData
 resources:
   - key: main
     path: static/backlog-button
 permissions:
   scopes:
     - read:jira-work
+    - read:sprint:jira-software
+    - read:issue:jira-software
 app:
   runtime:
     name: nodejs22.x
