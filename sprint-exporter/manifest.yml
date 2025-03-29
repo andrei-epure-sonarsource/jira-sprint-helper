@@ -1,11 +1,9 @@
 modules:
-  jira:projectPage:
-    - key: sprint-export-button
-      title: Export Sprint to CSV
+  jira:sprintAction:
+    - key: export-sprint-action
       resource: main
-      location:
-        projectTab: backlog
-      layout: basic
+      title: Export Sprint to CSV
+      function: export-sprint-data
   function:
     - key: export-sprint-data
       handler: index.exportSprintData
