@@ -1,0 +1,18 @@
+modules:
+  jira:sprintAction:
+    - key: iteration-tickets-exporter
+      resource: main
+      resolver:
+        function: resolver
+      viewportSize: medium
+      title: Iteration Tickets Exporter
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/hello-world/build
+app:
+  runtime:
+    name: nodejs20.x
+  id: ari:cloud:ecosystem::app/cfc4b4fe-29dd-4b46-81e0-784cb29ee814
