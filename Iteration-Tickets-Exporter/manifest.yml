@@ -2,13 +2,8 @@ modules:
   jira:sprintAction:
     - key: iteration-tickets-exporter
       resource: main
-      resolver:
-        function: resolver
       viewportSize: medium
       title: Iteration Tickets Exporter
-  function:
-    - key: resolver
-      handler: index.handler
 resources:
   - key: main
     path: static/hello-world/build

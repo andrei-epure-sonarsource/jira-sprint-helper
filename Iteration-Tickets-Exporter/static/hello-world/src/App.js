@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { invoke, view } from '@forge/bridge';
+import { view, requestJira } from '@forge/bridge';
 import './App.css';
 
 function App() {
@@ -8,30 +8,62 @@ function App() {
   const [sprintData, setSprintData] = useState(null);
   
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataDirectly = async () => {
       try {
-        // Get context first to ensure it's correctly retrieved by the bridge
+        // Get context first 
         const context = await view.getContext();
         console.log('Context received:', context);
         
-        // Call resolver (no parameters needed - it will use context)
-        const result = await invoke('getSprintData');
-        console.log('Data received:', result);
-        
-        if (result.error) {
-          throw new Error(result.error);
+        // Extract sprint ID directly from context
+        const sprintId = context?.extension?.sprint?.id;
+        if (!sprintId) {
+          throw new Error('Could not determine sprint ID');
         }
         
-        setSprintData(result);
+        console.log('Using sprint ID:', sprintId);
+        
+        // Make direct API calls from frontend using Forge bridge
+        const sprintResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}`);
+        const sprint = await sprintResponse.json();
+        console.log('Sprint data:', sprint);
+        
+        // Get issues directly
+        const issuesResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary`);
+        const issuesData = await issuesResponse.json();
+        console.log('Issue data:', issuesData);
+        
+        // Determine base URL for links
+        const baseUrl = context.cloudId 
+          ? `https://${context.cloudId}.atlassian.net` 
+          : 'https://atlassian.net';
+        
+        // Format the data for CSV
+        const issues = issuesData.issues ? issuesData.issues.map(issue => {
+          return {
+            key: issue.key,
+            title: issue.fields.summary,
+            url: `${baseUrl}/browse/${issue.key}`
+          };
+        }) : [];
+        
+        // Set state with all the data we need
+        setSprintData({
+          sprint: {
+            id: sprintId,
+            name: sprint.name
+          },
+          issues: issues
+        });
+        
       } catch (error) {
         console.error('Error:', error);
-        setError(error.message || 'Unknown error occurred');
+        setError(error.message || 'An unknown error occurred');
       } finally {
         setLoading(false);
       }
     };
     
-    fetchData();
+    fetchDataDirectly();
   }, []);
   
   const handleExport = () => {
