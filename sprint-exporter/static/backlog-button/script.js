@@ -1,8 +1,3 @@
-// Get a reference to the Forge Bridge API, which enables communication between the
-// frontend (running in the user's browser within Jira) and the backend (Forge functions
-// running in Atlassian's secure environment), as well as interaction with Jira APIs.
-
-// Wait for Forge API to be available
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM content loaded');
   
@@ -11,32 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const loaderContainer = document.getElementById('loader-container');
   const downloadButton = document.getElementById('downloadButton');
   
-  // Verify what's available in the global scope
-  console.log('Window object keys:', Object.keys(window));
+  if (statusDiv) statusDiv.textContent = 'Initializing...';
   
-  if (statusDiv) statusDiv.textContent = 'Checking for Forge API...';
+  // The bridge should be available as a global variable from the script tag
+  const bridgeScriptLoaded = typeof window.bridgeImport !== 'undefined';
+  console.log('Bridge script loaded:', bridgeScriptLoaded);
   
-  // Check if we're running inside Forge properly
-  if (!window.forge) {
-    console.error('Not running in Forge environment - window.forge is missing');
-    if (errorDiv) errorDiv.textContent = 'This app must run inside Atlassian Forge.';
-    if (statusDiv) statusDiv.textContent = 'Environment error';
-    return;
-  }
+  // Try to get the bridge from the global variable or from window.forge
+  const bridge = window.bridgeImport || (window.forge && window.forge.bridge);
   
-  // Log what's available in the forge object
-  console.log('Forge object properties:', Object.keys(window.forge));
-  
-  // Get the bridge
-  const bridge = window.forge.bridge;
   if (!bridge) {
-    console.error('Forge bridge is not available');
-    if (errorDiv) errorDiv.textContent = 'Forge bridge is not available.';
-    if (statusDiv) statusDiv.textContent = 'Bridge error';
+    console.error('Bridge not available');
+    if (errorDiv) errorDiv.textContent = 'Could not connect to Forge - try refreshing the page.';
+    if (statusDiv) statusDiv.textContent = 'Connection error';
     return;
   }
   
-  console.log('Bridge found, initializing...');
+  console.log('Bridge found, getting context...');
   
   // Use the bridge to get context
   bridge.getContext()
@@ -85,4 +71,16 @@ function downloadCSV(data, filename) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// Add script to load the bridge from CDN if it's missing
+if (!window.forge) {
+  console.log('Adding bridge script from CDN');
+  try {
+    // Store the imported bridge in a global variable
+    window.bridgeImport = require('@forge/bridge');
+    console.log('Bridge imported via require');
+  } catch (e) {
+    console.error('Failed to import bridge:', e);
+  }
 }
