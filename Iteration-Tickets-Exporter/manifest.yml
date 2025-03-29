@@ -14,6 +14,7 @@ resources:
     path: static/hello-world/build
 permissions:
   scopes:
+    - read:jira-work
     - read:sprint:jira-software
     - read:issue-details:jira
     - read:jql:jira

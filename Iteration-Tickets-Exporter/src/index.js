@@ -4,42 +4,29 @@ import { requestJira } from '@forge/api';
 const resolver = new Resolver();
 
 resolver.define('getSprintData', async (req) => {
-  console.log('Request context:', JSON.stringify(req.context, null, 2));
+  console.log('Request payload:', req.payload);
+  console.log('Request context:', req.context);
   
   try {
-    // Get the sprint ID and project info from the context
-    const sprintId = req.context.extension.sprint.id;
-    const projectId = req.context.extension.project.id;
-    const projectKey = req.context.extension.project.key;
+    // Get sprint ID from payload (if provided) or context
+    const sprintId = req.payload?.sprintId || req.context?.extension?.sprint?.id;
     
-    console.log(`Processing sprint ID: ${sprintId} for project: ${projectKey} (${projectId})`);
+    console.log(`Processing sprint ID: ${sprintId}`);
     
     if (!sprintId) {
-      return { error: 'Sprint ID not found in context' };
+      return { error: 'Sprint ID not found' };
     }
     
-    // Get sprint details using project context
+    // Get sprint details
     const sprintResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}`);
     const sprintData = await sprintResponse.json();
-    console.log('Sprint data retrieved');
+    console.log('Sprint data retrieved:', sprintData.name);
     
-    // Use JQL to get issues from the specific project and sprint
-    const jql = `project = ${projectKey} AND sprint = ${sprintId}`;
-    const issuesResponse = await requestJira(`/rest/api/3/search`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        jql: jql,
-        fields: ['summary'],
-        maxResults: 100
-      })
-    });
-    
+    // Get issues in sprint without project filter
+    const issuesResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary`);
     const issuesData = await issuesResponse.json();
     const issuesCount = issuesData.issues ? issuesData.issues.length : 0;
-    console.log(`Found ${issuesCount} issues using JQL: ${jql}`);
+    console.log(`Found ${issuesCount} issues in sprint`);
     
     // Get the baseUrl for creating issue URLs
     const baseUrl = req.context.localBaseUrl || req.context.extension.baseUrl;
@@ -50,7 +37,7 @@ resolver.define('getSprintData', async (req) => {
       return {
         key: key,
         title: issue.fields.summary,
-        url: `${baseUrl}/browse/${key}`
+        url: baseUrl ? `${baseUrl}/browse/${key}` : key // Fallback if no baseUrl
       };
     }) : [];
     
@@ -58,10 +45,6 @@ resolver.define('getSprintData', async (req) => {
       sprint: {
         id: sprintId,
         name: sprintData.name
-      },
-      project: {
-        id: projectId,
-        key: projectKey
       },
       issues: issues
     };
