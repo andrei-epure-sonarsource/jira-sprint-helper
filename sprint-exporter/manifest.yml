@@ -12,7 +12,6 @@ resources:
 permissions:
   scopes:
     - read:jira-work
-    - read:project
 app:
   runtime:
     name: nodejs22.x
