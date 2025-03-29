@@ -73,3 +73,30 @@
     padding: 8px 0;
     border-bottom: 1px solid #F4F5F7;
   }
+  
+  .subtask {
+    padding-left: 20px;
+    position: relative;
+  }
+  
+  .subtask:before {
+    content: '↳';
+    position: absolute;
+    left: 4px;
+    color: #6B778C;
+  }
+  
+  .parent-info {
+    font-size: 12px;
+    color: #6B778C;
+    margin-left: 8px;
+  }
+  
+  .spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0052CC;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+  }

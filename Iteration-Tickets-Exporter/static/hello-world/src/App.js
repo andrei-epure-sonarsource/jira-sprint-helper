@@ -27,22 +27,29 @@ function App() {
         const sprint = await sprintResponse.json();
         console.log('Sprint data:', sprint);
         
-        // Get issues directly
-        const issuesResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary`);
+        // Get issues with issuetype and parent fields
+        const issuesResponse = await requestJira(
+          `/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary,issuetype,parent`
+        );
         const issuesData = await issuesResponse.json();
         console.log('Issue data:', issuesData);
         
-        // Determine base URL for links
-        const baseUrl = context.cloudId 
-          ? `https://${context.cloudId}.atlassian.net` 
-          : 'https://atlassian.net';
+        // Get base URL from the browser
+        const baseUrl = window.location.origin;
+        console.log('Using base URL:', baseUrl);
         
-        // Format the data for CSV
+        // Format the data for CSV with parent info
         const issues = issuesData.issues ? issuesData.issues.map(issue => {
+          const key = issue.key;
+          const isSubtask = issue.fields.issuetype?.subtask || false;
+          const parentKey = isSubtask ? issue.fields.parent?.key || null : null;
+          
           return {
-            key: issue.key,
+            key: key,
             title: issue.fields.summary,
-            url: `${baseUrl}/browse/${issue.key}`
+            parentKey: parentKey,
+            isSubtask: isSubtask,
+            url: `${baseUrl}/browse/${key}`
           };
         }) : [];
         
@@ -69,11 +76,12 @@ function App() {
   const handleExport = () => {
     if (!sprintData || !sprintData.issues) return;
     
-    // Generate CSV
-    const headers = ['Key', 'Title', 'URL'];
+    // Generate CSV with parent info column
+    const headers = ['Key', 'Title', 'Parent ID', 'URL'];
     const rows = sprintData.issues.map(issue => [
       issue.key,
       issue.title,
+      issue.parentKey || '', // Empty string for non-subtasks
       issue.url
     ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(','));
     
@@ -125,8 +133,9 @@ function App() {
               <h4>Issues:</h4>
               <ul>
                 {sprintData.issues.slice(0, 5).map(issue => (
-                  <li key={issue.key}>
+                  <li key={issue.key} className={issue.isSubtask ? 'subtask' : ''}>
                     <strong>{issue.key}</strong>: {issue.title}
+                    {issue.isSubtask && <span className="parent-info"> (Subtask of: {issue.parentKey})</span>}
                   </li>
                 ))}
                 {sprintData.issues.length > 5 && (
