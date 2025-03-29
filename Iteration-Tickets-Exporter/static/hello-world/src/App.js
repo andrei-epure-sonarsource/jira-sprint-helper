@@ -35,9 +35,26 @@ function App() {
         console.log('Issue data:', issuesData);
         
         // Get Jira instance URL from context
-        const baseUrl = context.cloudId 
-          ? `https://${context.cloudId}.atlassian.net`
-          : context.siteUrl || window.location.origin;
+        let baseUrl;
+
+        // Try several methods to get the correct base URL
+        if (context.extension?.baseUrl) {
+          // This is most reliable for most Forge apps
+          baseUrl = context.extension.baseUrl;
+        } else if (context.siteUrl) {
+          // Fallback to siteUrl if available
+          baseUrl = context.siteUrl;
+        } else if (context.cloudId) {
+          // Try to use displayName if available with cloudId
+          const instanceName = context.displayName || context.cloudId;
+          baseUrl = `https://${instanceName}.atlassian.net`;
+        } else {
+          // Last resort fallback
+          baseUrl = 'https://atlassian.net';
+        }
+
+        // Remove trailing slash if present
+        baseUrl = baseUrl.replace(/\/$/, '');
 
         console.log('Using base URL:', baseUrl);
         
