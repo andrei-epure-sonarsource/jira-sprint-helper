@@ -2,12 +2,40 @@
 <html>
 <head>
     <title>Sprint Export</title>
-    <script src="https://unpkg.com/@forge/bridge@latest/umd/forge-bridge.min.js"></script>
+    <!-- Remove the external bridge script - Forge injects this automatically -->
+    <link rel="stylesheet" href="https://forge.cdn.prod.atlassian-dev.net/@atlaskit/css-reset@6.0.5/dist/bundle.css" />
     <script src="./script.js"></script>
+    <style>
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .button {
+            background-color: #0052CC;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            margin: 10px 0;
+        }
+        .loading {
+            margin-top: 10px;
+        }
+        .error {
+            color: #DE350B;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <button id="exportButton">Export to CSV</button>
-    <div id="loading" style="display: none;">Loading...</div>
-    <div id="error" style="color: red;"></div>
+    <div class="container">
+        <div id="status">Generating CSV export...</div>
+        <button id="downloadButton" class="button" style="display: none;">Download CSV</button>
+        <div id="error" class="error"></div>
+    </div>
 </body>
 </html>
