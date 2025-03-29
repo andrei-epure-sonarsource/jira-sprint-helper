@@ -8,15 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (statusDiv) statusDiv.textContent = 'Initializing...';
   
-  // The bridge should be available as a global variable from the script tag
-  const bridgeScriptLoaded = typeof window.bridgeImport !== 'undefined';
-  console.log('Bridge script loaded:', bridgeScriptLoaded);
+  // Log all available globals for debugging
+  console.log('Window object keys:', Object.keys(window));
   
-  // Try to get the bridge from the global variable or from window.forge
-  const bridge = window.bridgeImport || (window.forge && window.forge.bridge);
+  // In Forge apps, the bridge might be directly in window.bridge
+  const bridge = window.bridge;
   
   if (!bridge) {
-    console.error('Bridge not available');
+    console.error('Bridge not available - check window properties above');
     if (errorDiv) errorDiv.textContent = 'Could not connect to Forge - try refreshing the page.';
     if (statusDiv) statusDiv.textContent = 'Connection error';
     return;
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (downloadButton) {
         downloadButton.style.display = 'block';
-        downloadButton.onclick = () => downloadCSV(result, 'sprint_export.csv');
+        downloadButton.onclick = () => downloadCSV(result, `sprint_${sprintId}_export.csv`);
       }
     })
     .catch(error => {
@@ -61,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Function to programmatically trigger the download of a CSV file
 function downloadCSV(data, filename) {
   const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -71,16 +69,4 @@ function downloadCSV(data, filename) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}
-
-// Add script to load the bridge from CDN if it's missing
-if (!window.forge) {
-  console.log('Adding bridge script from CDN');
-  try {
-    // Store the imported bridge in a global variable
-    window.bridgeImport = require('@forge/bridge');
-    console.log('Bridge imported via require');
-  } catch (e) {
-    console.error('Failed to import bridge:', e);
-  }
 }
