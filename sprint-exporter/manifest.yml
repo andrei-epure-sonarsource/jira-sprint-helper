@@ -1,0 +1,18 @@
+modules:
+  jira:projectPage:
+    - key: sprint-exporter-hello-world-project-page
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: sprint-exporter
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  runtime:
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/c4f9da2f-6363-479a-8d8b-587fb3a4dfb5
