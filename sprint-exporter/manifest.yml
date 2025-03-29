@@ -8,11 +8,11 @@ modules:
       layout: basic # Changed to a valid value
 resources:
   - key: main
-    path: static/backlog-button/index.html
+    path: static/backlog-button
 permissions:
   scopes:
     - read:jira-work
-    - read:jira-project
+    - read:project
 app:
   runtime:
     name: nodejs22.x
