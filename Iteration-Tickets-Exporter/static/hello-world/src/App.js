@@ -129,20 +129,19 @@ function App() {
           </button>
           
           {sprintData.issues.length > 0 && (
-            <div className="issues-preview">
-              <h4>Issues:</h4>
+          <div className="issues-preview">
+            <h4>Issues: ({sprintData.issues.length})</h4>
+            <div className="issues-scrollable">
               <ul>
-                {sprintData.issues.slice(0, 5).map(issue => (
+                {sprintData.issues.map(issue => (
                   <li key={issue.key} className={issue.isSubtask ? 'subtask' : ''}>
                     <strong>{issue.key}</strong>: {issue.title}
                     {issue.isSubtask && <span className="parent-info"> (Subtask of: {issue.parentKey})</span>}
                   </li>
                 ))}
-                {sprintData.issues.length > 5 && (
-                  <li className="more-issues">...and {sprintData.issues.length - 5} more</li>
-                )}
               </ul>
             </div>
+          </div>
           )}
         </div>
       )}
