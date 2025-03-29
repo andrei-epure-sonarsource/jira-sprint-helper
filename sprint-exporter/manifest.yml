@@ -1,17 +1,19 @@
 modules:
   jira:projectPage:
-    - key: sprint-exporter-hello-world-project-page
-      resource: main
-      resolver:
-        function: resolver
-      render: native
-      title: sprint-exporter
-  function:
-    - key: resolver
-      handler: index.handler
+    - key: sprint-export-button
+      title: Export Sprint to CSV
+      resource: main # Changed 'resource' to point to a defined resource
+      location:
+        projectTab: backlog
+      layout:
+        alignItems: flex-start
 resources:
-  - key: main
-    path: src/frontend/index.jsx
+  - key: main # Define the 'main' resource
+    path: static/backlog-button/index.html # Path to your static HTML file
+permissions:
+  scopes:
+    - read:jira-work
+    - read:jira-project
 app:
   runtime:
     name: nodejs22.x
