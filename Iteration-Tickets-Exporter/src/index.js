@@ -22,32 +22,30 @@ resolver.define('getSprintData', async (req) => {
     const sprintData = await sprintResponse.json();
     console.log('Sprint data:', sprintData);
     
-    // Get all issues in the sprint
+    // Get all issues in the sprint - just requesting summary field
     const issuesResponse = await requestJira(
-      `/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary,status,assignee,issuetype,priority,customfield_10016`
+      `/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary`
     );
     const issuesData = await issuesResponse.json();
     console.log('Found', issuesData.issues.length, 'issues');
     
-    // Format the data for CSV export
-    const issues = issuesData.issues.map(issue => ({
-      key: issue.key,
-      summary: issue.fields.summary,
-      status: issue.fields.status?.name || 'No Status',
-      assignee: issue.fields.assignee?.displayName || 'Unassigned',
-      type: issue.fields.issuetype?.name || 'Unknown',
-      priority: issue.fields.priority?.name || 'None',
-      storyPoints: issue.fields.customfield_10016 || 0 // Assuming this is the story points field
-    }));
+    // Get the baseUrl from context for creating issue URLs
+    const baseUrl = req.context.localBaseUrl;
+    
+    // Format the data for CSV export - simplified to just key, title, and URL
+    const issues = issuesData.issues.map(issue => {
+      const key = issue.key;
+      return {
+        key: key,
+        title: issue.fields.summary,
+        url: `${baseUrl}/browse/${key}`
+      };
+    });
     
     return {
       sprint: {
         id: sprintId,
-        name: sprintData.name,
-        state: sprintData.state,
-        startDate: sprintData.startDate,
-        endDate: sprintData.endDate,
-        goal: sprintData.goal
+        name: sprintData.name
       },
       issues: issues
     };

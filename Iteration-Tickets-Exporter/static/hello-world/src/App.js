@@ -33,21 +33,16 @@ function App() {
   const exportCSV = () => {
     if (!sprintData || !sprintData.issues) return;
     
-    // Create header row
-    const headers = ['Key', 'Summary', 'Status', 'Assignee', 'Type', 'Priority', 'Story Points'];
+    // Create header row - simplified for key, title, URL
+    const headers = ['Key', 'Title', 'URL'];
     
     // Create data rows
     const rows = sprintData.issues.map(issue => [
       issue.key,
-      issue.summary,
-      issue.status,
-      issue.assignee,
-      issue.type,
-      issue.priority,
-      issue.storyPoints
+      issue.title,
+      issue.url
     ].map(value => {
-      // Escape quotes and wrap in quotes to handle commas in text
-      if (value === null || value === undefined) return '""';
+      // Escape quotes and wrap in quotes
       return `"${String(value).replace(/"/g, '""')}"`;
     }).join(','));
     
@@ -69,7 +64,7 @@ function App() {
 
   return (
     <div className="container">
-      <h2>Iteration Tickets Exporter</h2>
+      <h2>Sprint Tickets Exporter</h2>
       
       {loading && (
         <div className="loading">
@@ -87,8 +82,7 @@ function App() {
       {sprintData && (
         <div className="sprint-info">
           <h3>{sprintData.sprint.name}</h3>
-          <p>Status: {sprintData.sprint.state}</p>
-          <p>Issues: {sprintData.issues.length}</p>
+          <p>Number of issues: {sprintData.issues.length}</p>
           
           {sprintData.issues.length > 0 && (
             <button className="export-button" onClick={exportCSV}>
@@ -97,15 +91,15 @@ function App() {
           )}
           
           <div className="issues-list">
-            <h4>Issues in this sprint:</h4>
+            <h4>Sample issues in this sprint:</h4>
             <ul>
-              {sprintData.issues.slice(0, 10).map(issue => (
+              {sprintData.issues.slice(0, 5).map(issue => (
                 <li key={issue.key}>
-                  <strong>{issue.key}</strong>: {issue.summary} ({issue.status})
+                  <strong>{issue.key}</strong>: {issue.title}
                 </li>
               ))}
-              {sprintData.issues.length > 10 && (
-                <li>... and {sprintData.issues.length - 10} more</li>
+              {sprintData.issues.length > 5 && (
+                <li>... and {sprintData.issues.length - 5} more</li>
               )}
             </ul>
           </div>
