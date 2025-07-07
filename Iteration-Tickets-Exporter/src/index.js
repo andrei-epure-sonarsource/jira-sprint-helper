@@ -23,7 +23,7 @@ resolver.define('getSprintData', async (req) => {
     console.log('Sprint data retrieved:', sprintData.name);
     
     // Get issues in sprint without project filter
-    const issuesResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary`);
+    const issuesResponse = await requestJira(`/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary,status`);
     const issuesData = await issuesResponse.json();
     const issuesCount = issuesData.issues ? issuesData.issues.length : 0;
     console.log(`Found ${issuesCount} issues in sprint`);
@@ -31,8 +31,14 @@ resolver.define('getSprintData', async (req) => {
     // Get the baseUrl for creating issue URLs
     const baseUrl = req.context.localBaseUrl || req.context.extension.baseUrl;
     
+    // Define the statuses to be filtered out
+    const excludedStatuses = ["done", "closed"];
+
     // Format the data for CSV export
-    const issues = issuesData.issues ? issuesData.issues.map(issue => {
+    const issues = issuesData.issues ? issuesData.issues.filter(issue => {
+      const status = issue.fields.status.name.toLowerCase();
+      return !excludedStatuses.includes(status);
+    }).map(issue => {
       const key = issue.key;
       return {
         key: key,
