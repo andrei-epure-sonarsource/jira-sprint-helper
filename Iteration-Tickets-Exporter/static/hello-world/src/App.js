@@ -102,14 +102,20 @@ function App() {
   const handleExport = () => {
     if (!sprintData || !sprintData.issues) return;
     
-    // Generate CSV with parent info column
-    const headers = ['Key', 'Title', 'Parent ID', 'URL'];
-    const rows = sprintData.issues.map(issue => [
-      issue.key,
-      issue.title,
-      issue.parentKey || '', // Empty string for non-subtasks
-      issue.url
-    ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(','));
+    // Generate CSV with combined parent info and new column order
+    const headers = ['Key', 'URL', 'Title'];
+    const rows = sprintData.issues.map(issue => {
+      // If the issue is a subtask, prefix the title with the parent key
+      const title = issue.parentKey
+        ? `(${issue.parentKey}) ${issue.title}`
+        : issue.title;
+      
+      return [
+        issue.key,
+        issue.url,
+        title
+      ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(',');
+    });
     
     const csvContent = [headers.join(','), ...rows].join('\n');
     
