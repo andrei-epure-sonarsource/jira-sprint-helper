@@ -29,7 +29,7 @@ function App() {
         
         // Get issues with issuetype and parent fields
         const issuesResponse = await requestJira(
-          `/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary,issuetype,parent`
+          `/rest/agile/1.0/sprint/${sprintId}/issue?maxResults=100&fields=summary,issuetype,parent,status`
         );
         const issuesData = await issuesResponse.json();
         console.log('Issue data:', issuesData);
@@ -58,8 +58,14 @@ function App() {
 
         console.log('Using base URL:', baseUrl);
         
+        // Define the statuses to be filtered out
+        const excludedStatuses = ["done", "closed"];
+        
         // Format the data for CSV with parent info
-        const issues = issuesData.issues ? issuesData.issues.map(issue => {
+        const issues = issuesData.issues ? issuesData.issues.filter(issue => {
+          const status = issue.fields.status.name.toLowerCase();
+          return !excludedStatuses.includes(status);
+        }).map(issue => {
           const key = issue.key;
           const isSubtask = issue.fields.issuetype?.subtask || false;
           const parentKey = isSubtask ? issue.fields.parent?.key || null : null;
